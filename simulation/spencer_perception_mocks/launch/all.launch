@@ -12,7 +12,7 @@
     <arg name="driving_robot" default="true"/>
 
     <node name="mock_detected_and_tracked_persons" type="detected_and_tracked_persons.py" pkg="spencer_perception_mocks" if="$(arg detected_and_tracked_persons)"/>
-    <node name="mock_spokespersons" type="spokespersons.py" pkg="spencer_perception_mocks" if="$(arg spokespersons)"/>
+    <!--<node name="mock_spokespersons" type="spokespersons.py" pkg="spencer_perception_mocks" if="$(arg spokespersons)"/>-->
     <node name="mock_human_attributes" type="human_attributes.py" pkg="spencer_perception_mocks" if="$(arg human_attributes)"/>
     <node name="mock_social_relations" type="social_relations.py" pkg="spencer_perception_mocks" if="$(arg social_relations)"/>
     <node name="mock_tracked_groups" type="tracked_groups.py" pkg="spencer_perception_mocks" if="$(arg tracked_groups)"/>
@@ -20,6 +20,6 @@
    
     <node name="mock_driving_robot" type="driving_robot.py" pkg="spencer_perception_mocks" if="$(arg driving_robot)"/>
 
-    <node name="spencer_perception_mocks_rviz" type="rviz" pkg="rviz" if="$(arg visualization)"
-        args="-d $(find spencer_perception_mocks)/launch/visualization.rviz"/>
+    <!--<node name="spencer_perception_mocks_rviz" type="rviz" pkg="rviz" if="$(arg visualization)"-->
+        <!--args="-d $(find spencer_perception_mocks)/launch/visualization.rviz"/>-->
 </launch>
