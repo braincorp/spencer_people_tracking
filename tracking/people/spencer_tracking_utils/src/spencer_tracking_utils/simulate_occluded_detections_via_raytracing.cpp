@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 
     privateHandle.param<double>("person_radius", g_personRadius, 0.25);
     privateHandle.param<double>("sensor_max_range", g_sensorMaxRange, 10.0);
-    privateHandle.param<std::string>("sensor_target_frame", g_sensorTargetFrame, "base_footprint");
+    privateHandle.param<std::string>("sensor_target_frame", g_sensorTargetFrame, "base_link");
 
     std::string inputTopic = "input_detections";
     std::string outputTopic = "output_detections";

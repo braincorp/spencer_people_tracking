@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Author: Timm Linder, linder@cs.uni-freiburg.de
 #
-# Simulates a driving robot and publishes the corresponding odom --> base_footprint transform on /tf
+# Simulates a driving robot and publishes the corresponding odom --> base_link transform on /tf
 # and odometry on /spencer/sensors/odom.
 
 import rospy, tf, numpy
@@ -18,10 +18,10 @@ odomPublisher = rospy.Publisher("/spencer/sensors/odom", Odometry)
 # State variables
 updateRateHz = 30
 
-rospy.loginfo("Publishing mock odom --> base_footprint transform on /tf and odometry on /odom")
+rospy.loginfo("Publishing mock odom --> base_link transform on /tf and odometry on /odom")
 rate = rospy.Rate(updateRateHz)
 
-frameId = rospy.get_param("frame", "base_footprint")
+frameId = rospy.get_param("frame", "base_link")
 parentFrameId = rospy.get_param("parent_frame", "odom")
 
 lastPosition = None

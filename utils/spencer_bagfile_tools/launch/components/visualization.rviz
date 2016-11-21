@@ -74,7 +74,7 @@ Visualization Manager:
           Length: 1
           Name: Base Footprint
           Radius: 0.025
-          Reference Frame: base_footprint
+          Reference Frame: base_link
           Value: true
         - Class: rviz/TF
           Enabled: false
@@ -1391,7 +1391,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 40; 40; 40
-    Fixed Frame: base_footprint
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:

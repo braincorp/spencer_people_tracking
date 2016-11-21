@@ -20,8 +20,8 @@
 
     <!-- Set up dummy transforms into an imaginary robot and odom frame -->
     <group if="$(arg dummy_transforms)">
-        <node name="tf_base_footprint" pkg="tf" type="static_transform_publisher" args="0 0 $(arg height_above_ground) 0 0 0 base_footprint rgbd_front_top_link 10"/>
-        <node name="tf_odom"           pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 odom base_footprint 10"/>
+        <node name="tf_base_link" pkg="tf" type="static_transform_publisher" args="0 0 $(arg height_above_ground) 0 0 0 base_link rgbd_front_top_link 10"/>
+        <node name="tf_odom"           pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 odom base_link 10"/>
     </group>
 
 

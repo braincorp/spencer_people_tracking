@@ -4,5 +4,5 @@
 # with a particular spencer_tracking_msgs/TrackedPerson (which contains a reference to a composite person detection ID).
 
 Header                      header          # Header timestamp is set to the *latest* timestamp of all fused DetectedPerson messages.
-                                            # Before fusion, all detections are transformed into a common coordinate frame (usually base_footprint).
+                                            # Before fusion, all detections are transformed into a common coordinate frame (usually base_link).
 CompositeDetectedPerson[]   elements        # Fused (merged) detected persons

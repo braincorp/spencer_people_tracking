@@ -26,13 +26,13 @@ int main(int argc, char **argv)
     // Declare variables that can be modified by launch file or command line.
     std::string pub_topic_gp;
     std::string camera_frame;
-    std::string base_footprint;
+    std::string base_link;
 
     // Initialize node parameters from launch file or command line.
     // Use a private node handle so that multiple instances of the node can be run simultaneously
     // while using different parameters.
     ros::NodeHandle private_node_handle_("~");
-    private_node_handle_.param("base_footprint", base_footprint, string("base_footprint"));
+    private_node_handle_.param("base_link", base_link, string("base_link"));
     private_node_handle_.param("camera_frame", camera_frame, string("/camera/"));
 
     // Create a topic publisher
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
         geometry_msgs::PointStamped distancePointStamped;
         geometry_msgs::PointStamped distancePointStampedCamera;
 
-        normalVectorStamped.header.frame_id = base_footprint;
+        normalVectorStamped.header.frame_id = base_link;
         normalVectorStamped.header.stamp = ros::Time();
         normalVectorStamped.vector.x = 0.0;
         normalVectorStamped.vector.y = 0.0;
@@ -67,10 +67,10 @@ int main(int argc, char **argv)
         distancePointStamped.point.z = 0.0;
 
         try {
-            listener->waitForTransform(base_footprint, camera_frame, ros::Time(), ros::Duration(0.1));
+            listener->waitForTransform(base_link, camera_frame, ros::Time(), ros::Duration(0.1));
             listener->transformVector(camera_frame, normalVectorStamped, normalVectorStampedCamera);
-            listener->waitForTransform(camera_frame, base_footprint, ros::Time(), ros::Duration(0.1));
-            listener->transformPoint(base_footprint, distancePointStamped, distancePointStampedCamera);
+            listener->waitForTransform(camera_frame, base_link, ros::Time(), ros::Duration(0.1));
+            listener->transformPoint(base_link, distancePointStamped, distancePointStampedCamera);
 
             _normal.setX(normalVectorStampedCamera.vector.x);
             _normal.setY(normalVectorStampedCamera.vector.y);

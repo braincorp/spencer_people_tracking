@@ -108,7 +108,7 @@ void newTrackedPersonsReceived(const TrackedPersons::ConstPtr& trackedPersons) {
                 if(!trackedPerson.is_occluded || !g_rememberTracksWhichOnceMoved) {
                     StampedPosition stampedPosition;
                     stampedPosition.stamp = now;
-                    stampedPosition.x = trackedPerson.pose.pose.position.x; // assumes x, y are groundplane coordinates (e.g. frame ID is base_footprint, odom, etc.)
+                    stampedPosition.x = trackedPerson.pose.pose.position.x; // assumes x, y are groundplane coordinates (e.g. frame ID is base_link, odom, etc.)
                     stampedPosition.y = trackedPerson.pose.pose.position.y;
                     existingRecord.positionHistory.push_back(stampedPosition);
 

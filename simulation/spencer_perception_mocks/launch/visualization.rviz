@@ -50,9 +50,9 @@ Visualization Manager:
     - Class: rviz/Axes
       Enabled: true
       Length: 1
-      Name: Robot base_footprint
+      Name: Robot base_link
       Radius: 0.1
-      Reference Frame: base_footprint
+      Reference Frame: base_link
       Value: true
     - Class: rviz/Axes
       Enabled: true

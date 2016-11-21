@@ -196,7 +196,7 @@
 
     <include file="$(find hector_mapping)/launch/mapping_default.launch">
       <arg name="pub_map_odom_transform" value="true"/>
-      <arg name="base_frame" value="base_footprint"/>
+      <arg name="base_frame" value="base_link"/>
       <arg name="odom_frame" value="laser_odom"/>
       <arg name="map_size" value="10000"/> <!-- 500m x 500m -->
       <arg name="scan_topic" value="/spencer/sensors/laser/front/echo0"/>

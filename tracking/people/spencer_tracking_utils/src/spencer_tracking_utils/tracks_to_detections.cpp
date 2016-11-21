@@ -56,7 +56,7 @@ void newTrackedPersonsReceived(const TrackedPersons::ConstPtr& trackedPersons) {
             detectedPerson.pose = trackedPerson.pose;
 
             if(g_overridePoseCovariance) {
-                // We assume that x, y are groundplane coordinates (e.g. base_footprint, base_link or odom frame)
+                // We assume that x, y are groundplane coordinates (e.g. base_link, base_link or odom frame)
                 const double LARGE_VARIANCE = 999999999;
                 for(size_t d = 0; d < 2; d++) detectedPerson.pose.covariance[d*6 + d] = g_poseVariance;
                 for(size_t d = 2; d < 6; d++) detectedPerson.pose.covariance[d*6 + d] = LARGE_VARIANCE;  

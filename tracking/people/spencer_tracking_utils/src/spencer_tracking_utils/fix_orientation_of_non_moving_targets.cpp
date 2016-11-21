@@ -112,7 +112,7 @@ void newTrackedPersonsReceived(const TrackedPersons::ConstPtr& trackedPersons) {
                 poseInSourceFrame.header = trackedPersons->header;
                 poseInSourceFrame.pose = trackedPerson.pose.pose;
 
-                const std::string targetFrame = "base_footprint";
+                const std::string targetFrame = "base_link";
                 try {
                     if(!waitedForTransform) {
                         g_transformListener->waitForTransform(targetFrame, poseInSourceFrame.header.frame_id, poseInSourceFrame.header.stamp, ros::Duration(3.0));
@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     g_resultingTracksPublisher = nodeHandle.advertise<TrackedPersons>(outputTopic, 3);
 
     ROS_INFO_STREAM("Fixing orientations of tracks on topic " << ros::names::remap(inputTopic) << " and publishing to output topic " << ros::names::remap(outputTopic)
-        << ". Orientation of slow-moving targets (slower than " << g_minRequiredAvgVelocity << " m/s) will be set to their last known orientation, or facing towards base_footprint if last known orientation is not available.");
+        << ". Orientation of slow-moving targets (slower than " << g_minRequiredAvgVelocity << " m/s) will be set to their last known orientation, or facing towards base_link if last known orientation is not available.");
 
     ros::spin();
 }

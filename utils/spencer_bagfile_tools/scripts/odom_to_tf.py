@@ -30,7 +30,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Publishes the content of /spencer/sensors/odom as a TF transform from odom to base_footprint.
+# Publishes the content of /spencer/sensors/odom as a TF transform from odom to base_link.
 
 import rospy, math, numpy, tf
 from nav_msgs.msg import Odometry
@@ -39,7 +39,7 @@ def odometryCallback(msg):
     q = msg.pose.pose.orientation
 
     transformBroadcaster.sendTransform( (msg.pose.pose.position.x, msg.pose.pose.position.y, 0),
-        (q.x, q.y, q.z, q.w), msg.header.stamp, "base_footprint", "odom")
+        (q.x, q.y, q.z, q.w), msg.header.stamp, "base_link", "odom")
 
 if __name__ == '__main__':  
     rospy.init_node("odom_to_tf")
@@ -49,6 +49,6 @@ if __name__ == '__main__':
 
     subscriber = rospy.Subscriber("/spencer/sensors/odom", Odometry, odometryCallback)
         
-    rospy.loginfo("Publishing odometry from /spencer/sensors/odom to TF (odom --> base_footprint)...")
+    rospy.loginfo("Publishing odometry from /spencer/sensors/odom to TF (odom --> base_link)...")
     rospy.spin()
 

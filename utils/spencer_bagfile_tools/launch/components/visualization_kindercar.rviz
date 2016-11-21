@@ -68,7 +68,7 @@ Visualization Manager:
           Length: 1
           Name: Base Footprint
           Radius: 0.025
-          Reference Frame: base_footprint
+          Reference Frame: base_link
           Value: true
         - Class: rviz/TF
           Enabled: false
@@ -102,7 +102,7 @@ Visualization Manager:
         Z: 0
       Plane: XY
       Plane Cell Count: 500
-      Reference Frame: base_footprint
+      Reference Frame: base_link
       Value: true
     - Alpha: 0.1
       Cell Size: 0.1
@@ -731,7 +731,7 @@ Visualization Manager:
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            base_footprint:
+            base_link:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -1419,7 +1419,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 40; 40; 40
-    Fixed Frame: base_footprint
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
