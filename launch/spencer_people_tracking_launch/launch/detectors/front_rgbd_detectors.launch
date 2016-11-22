@@ -27,7 +27,7 @@
             <param name="config_file" value="$(find rwth_upper_body_detector)/config/config_Asus.inp" type="string"/>
             <param name="template_file" value="$(find rwth_upper_body_detector)/config/upper_temp_n.txt" type="string"/>
             <param name="queue_size" value="5" type="int"/>
-            <param name="camera_namespace" value="ifm" type="string"/>
+            <param name="camera_namespace" value="/ifm" type="string"/>
             <param name="upper_body_detections" value="upper_body_detector/detections" type="string"/>
             <param name="upper_body_bb_centres" value="upper_body_detector/bounding_box_centres" type="string"/>
             <param name="upper_body_image" value="image" type="string"/>

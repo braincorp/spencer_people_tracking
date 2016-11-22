@@ -177,13 +177,13 @@ void colorImageCallback(const ImageConstPtr &color) {
 }
 
 
-void cameraInfoCallback(const CameraInfoConstPtr &info)
-{
-    ROS_ERROR("CAMERA INFO");
-    camera_info = info;
-}
+//void cameraInfoCallback(const CameraInfoConstPtr &info)
+//{
+//    ROS_ERROR("CAMERA INFO");
+//    camera_info = info;
+//}
 
-void callback(const ImageConstPtr &depth, const GroundPlane::ConstPtr &gp)
+void callback(const ImageConstPtr &depth, const GroundPlane::ConstPtr &gp, const CameraInfoConstPtr &info)
 {
     // Check if calculation is necessary
     bool detect = pub_message.getNumSubscribers() > 0 || pub_centres.getNumSubscribers() > 0 || pub_detected_persons.getNumSubscribers() > 0;
@@ -192,6 +192,7 @@ void callback(const ImageConstPtr &depth, const GroundPlane::ConstPtr &gp)
     if(!detect && !vis)
         return;
 
+    ROS_ERROR("DEPTH");
     // Get depth image as matrix
     cv_depth_ptr = cv_bridge::toCvCopy(depth);
     img_depth_ = cv_depth_ptr->image;
@@ -385,10 +386,9 @@ int main(int argc, char **argv)
     image_transport::SubscriberFilter subscriber_depth;
     // The color image is not synchronized for performance reasons since it is only needed when somebody is listening to the visualization image topic.
     // Otherwise, we avoid deserialization -- which can already take 10-20% CPU -- by unsubscribing.
-    subscriber_depth.subscribe(it, topic_depth_image.c_str(),1); subscriber_depth.unsubscribe();
-    ros::Subscriber subscriber_camera_info = n.subscribe(topic_camera_info.c_str(), 1, cameraInfoCallback);
-
-    message_filters::Subscriber<GroundPlane> subscriber_gp(n, topic_gp.c_str(), 1); subscriber_gp.unsubscribe();
+    subscriber_depth.subscribe(it, topic_depth_image.c_str(),5); subscriber_depth.unsubscribe();
+    message_filters::Subscriber<CameraInfo> subscriber_camera_info(n, topic_camera_info.c_str(), 5);
+    message_filters::Subscriber<GroundPlane> subscriber_gp(n, topic_gp.c_str(), 5);
 
     ros::SubscriberStatusCallback con_cb = boost::bind(&connectCallback,
                                                        boost::ref(subscriber_gp),
@@ -400,7 +400,7 @@ int main(int argc, char **argv)
                                                                      boost::ref(it));
 
     //The real queue size for synchronisation is set here.
-    sync_policies::ApproximateTime<Image, GroundPlane> MySyncPolicy(queue_size);
+    sync_policies::ApproximateTime<Image, GroundPlane, CameraInfo> MySyncPolicy(queue_size);
     //MySyncPolicy.setAgePenalty(1000); //set high age penalty to publish older data faster even if it might not be correctly synchronized.
 
     // Initialise detector
@@ -409,12 +409,13 @@ int main(int argc, char **argv)
     detector = new Detector();
 
     // Create synchronization policy. Here: async because time stamps will never match exactly
-    const sync_policies::ApproximateTime<Image, GroundPlane> MyConstSyncPolicy = MySyncPolicy;
-    Synchronizer< sync_policies::ApproximateTime<Image, GroundPlane> > sync(MyConstSyncPolicy,
+    const sync_policies::ApproximateTime<Image, GroundPlane, CameraInfo> MyConstSyncPolicy = MySyncPolicy;
+    Synchronizer< sync_policies::ApproximateTime<Image, GroundPlane, CameraInfo> > sync(MyConstSyncPolicy,
                                                                                        subscriber_depth,
-                                                                                       subscriber_gp);
+                                                                                       subscriber_gp,
+                                                                                       subscriber_camera_info);
     // Register one callback for all topics
-    sync.registerCallback(boost::bind(&callback, _1, _2));
+    sync.registerCallback(boost::bind(&callback, _1, _2, _3));
 
 
     // Create publisher
@@ -437,7 +438,6 @@ int main(int argc, char **argv)
     pub_detected_persons.setExpectedFrequency(min_expected_frequency, max_expected_frequency);
     pub_detected_persons.setMaximumTimestampOffset(0.3, 0.1);
     pub_detected_persons.finalizeSetup();
-
     // Start ros thread managment
     ros::spin();
 
