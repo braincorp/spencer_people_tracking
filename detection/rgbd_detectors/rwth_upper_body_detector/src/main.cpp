@@ -42,13 +42,14 @@ using namespace message_filters;
 using namespace rwth_perception_people_msgs;
 
 ros::Publisher pub_message;
-image_transport::Publisher pub_result_image;
+//image_transport::Publisher pub_result_image;
 ros::Publisher pub_centres;
 spencer_diagnostics::MonitoredPublisher pub_detected_persons;
 
 cv::Mat img_depth_;
 cv_bridge::CvImagePtr cv_depth_ptr;	// cv_bridge for depth image
 ImageConstPtr color_image; // we cache the most recent color image for visualization purposes if somebody is listening
+CameraInfoConstPtr camera_info;
 string topic_color_image;
 
 Matrix<double> upper_body_template;
@@ -175,11 +176,18 @@ void colorImageCallback(const ImageConstPtr &color) {
     color_image = color;
 }
 
-void callback(const ImageConstPtr &depth, const GroundPlane::ConstPtr &gp, const CameraInfoConstPtr &info)
+
+void cameraInfoCallback(const CameraInfoConstPtr &info)
+{
+    ROS_ERROR("CAMERA INFO");
+    camera_info = info;
+}
+
+void callback(const ImageConstPtr &depth, const GroundPlane::ConstPtr &gp)
 {
     // Check if calculation is necessary
     bool detect = pub_message.getNumSubscribers() > 0 || pub_centres.getNumSubscribers() > 0 || pub_detected_persons.getNumSubscribers() > 0;
-    bool vis = pub_result_image.getNumSubscribers() > 0;
+    bool vis = false;
 
     if(!detect && !vis)
         return;
@@ -187,7 +195,7 @@ void callback(const ImageConstPtr &depth, const GroundPlane::ConstPtr &gp, const
     // Get depth image as matrix
     cv_depth_ptr = cv_bridge::toCvCopy(depth);
     img_depth_ = cv_depth_ptr->image;
-    Matrix<double> matrix_depth(info->width, info->height);
+    Matrix<double> matrix_depth(camera_info->width, camera_info->height);
     for (int r = 0;r < 480;r++){
         for (int c = 0;c < 640;c++) {
             matrix_depth(c, r) = img_depth_.at<float>(r,c);
@@ -197,7 +205,7 @@ void callback(const ImageConstPtr &depth, const GroundPlane::ConstPtr &gp, const
     // Generate base camera
     Matrix<double> R = Eye<double>(3);
     Vector<double> t(3, 0.0);
-    Matrix<double> K(3,3, (double*)&info->K[0]);
+    Matrix<double> K(3,3, (double*)&camera_info->K[0]);
 
     // Get GP
     Vector<double> GP(3, (double*) &gp->n[0]);
@@ -280,7 +288,7 @@ void callback(const ImageConstPtr &depth, const GroundPlane::ConstPtr &gp, const
             sensor_image.data   = vector<uchar>(bits, bits + image_rgb.byteCount());
             sensor_image.encoding = color_image->encoding;
 
-            pub_result_image.publish(sensor_image);
+            //pub_result_image.publish(sensor_image);
         } else {
             ROS_WARN("Color image not in RGB8/BGR8 format not supported");
         }
@@ -293,27 +301,22 @@ void callback(const ImageConstPtr &depth, const GroundPlane::ConstPtr &gp, const
 }
 
 // Connection callback that unsubscribes from the tracker if no one is subscribed.
-void connectCallback(message_filters::Subscriber<CameraInfo> &sub_cam,
-                     message_filters::Subscriber<GroundPlane> &sub_gp,
-                     boost::shared_ptr<image_transport::Subscriber> &sub_col,
+void connectCallback(message_filters::Subscriber<GroundPlane> &sub_gp,
                      image_transport::SubscriberFilter &sub_dep,
                      image_transport::ImageTransport &it) {
-    if(!pub_message.getNumSubscribers() && !pub_result_image.getNumSubscribers() && !pub_centres.getNumSubscribers() && !pub_detected_persons.getNumSubscribers()) {
-        ROS_DEBUG("Upper Body Detector: No subscribers. Unsubscribing.");
-        sub_cam.unsubscribe();
+    if(!pub_message.getNumSubscribers() && !pub_centres.getNumSubscribers() && !pub_detected_persons.getNumSubscribers()) {
+        ROS_ERROR("Upper Body Detector: No subscribers. Unsubscribing.");
         sub_gp.unsubscribe();
-        sub_col->shutdown();
         sub_dep.unsubscribe();
     } else {
-        ROS_DEBUG("Upper Body Detector: New subscribers. Subscribing.");
-        sub_cam.subscribe();
+        ROS_ERROR("Upper Body Detector: New subscribers. Subscribing.");
         sub_gp.subscribe();
         sub_dep.subscribe(it,sub_dep.getTopic().c_str(),1);
     }
 
-    if(pub_result_image.getNumSubscribers()) {
-        sub_col = boost::make_shared<image_transport::Subscriber>( it.subscribe(topic_color_image, 1, &colorImageCallback) );
-    }
+//    if(pub_result_image.getNumSubscribers()) {
+//        sub_col = boost::make_shared<image_transport::Subscriber>( it.subscribe(topic_color_image, 1, &colorImageCallback) );
+//    }
 }  
 
 int main(int argc, char **argv)
@@ -332,7 +335,7 @@ int main(int argc, char **argv)
 
     string pub_topic_centres;
     string pub_topic_ubd;
-    string pub_topic_result_image;
+    //string pub_topic_result_image;
     string pub_topic_detected_persons;
 
     // Initialize node parameters from launch file or command line.
@@ -346,9 +349,9 @@ int main(int argc, char **argv)
     private_node_handle_.param("camera_namespace", cam_ns, string("/camera"));
     private_node_handle_.param("ground_plane", topic_gp, string("/ground_plane"));
 
-    topic_color_image = cam_ns + "/rgb/image_raw";
-    string topic_depth_image = cam_ns + "/depth/image_rect";
-    string topic_camera_info = cam_ns + "/depth/camera_info";
+    //topic_color_image = cam_ns + "/rgb/image_raw";
+    string topic_depth_image = cam_ns + "/depth";
+    string topic_camera_info = cam_ns + "/camera_info";
 
     // New parameters for SPENCER
     private_node_handle_.param("detection_id_increment", detection_id_increment, 1);
@@ -382,27 +385,23 @@ int main(int argc, char **argv)
     image_transport::SubscriberFilter subscriber_depth;
     // The color image is not synchronized for performance reasons since it is only needed when somebody is listening to the visualization image topic.
     // Otherwise, we avoid deserialization -- which can already take 10-20% CPU -- by unsubscribing.
-    boost::shared_ptr<image_transport::Subscriber> subscriber_color;
     subscriber_depth.subscribe(it, topic_depth_image.c_str(),1); subscriber_depth.unsubscribe();
-    message_filters::Subscriber<CameraInfo> subscriber_camera_info(n, topic_camera_info.c_str(), 1); subscriber_camera_info.unsubscribe();
+    ros::Subscriber subscriber_camera_info = n.subscribe(topic_camera_info.c_str(), 1, cameraInfoCallback);
+
     message_filters::Subscriber<GroundPlane> subscriber_gp(n, topic_gp.c_str(), 1); subscriber_gp.unsubscribe();
 
     ros::SubscriberStatusCallback con_cb = boost::bind(&connectCallback,
-                                                       boost::ref(subscriber_camera_info),
                                                        boost::ref(subscriber_gp),
-                                                       boost::ref(subscriber_color),
                                                        boost::ref(subscriber_depth),
                                                        boost::ref(it));
     image_transport::SubscriberStatusCallback image_cb = boost::bind(&connectCallback,
-                                                                     boost::ref(subscriber_camera_info),
                                                                      boost::ref(subscriber_gp),
-                                                                     boost::ref(subscriber_color),
                                                                      boost::ref(subscriber_depth),
                                                                      boost::ref(it));
 
     //The real queue size for synchronisation is set here.
-    sync_policies::ApproximateTime<Image, GroundPlane, CameraInfo> MySyncPolicy(queue_size);
-    MySyncPolicy.setAgePenalty(1000); //set high age penalty to publish older data faster even if it might not be correctly synchronized.
+    sync_policies::ApproximateTime<Image, GroundPlane> MySyncPolicy(queue_size);
+    //MySyncPolicy.setAgePenalty(1000); //set high age penalty to publish older data faster even if it might not be correctly synchronized.
 
     // Initialise detector
     ReadUpperBodyTemplate(template_path);
@@ -410,13 +409,12 @@ int main(int argc, char **argv)
     detector = new Detector();
 
     // Create synchronization policy. Here: async because time stamps will never match exactly
-    const sync_policies::ApproximateTime<Image, GroundPlane, CameraInfo> MyConstSyncPolicy = MySyncPolicy;
-    Synchronizer< sync_policies::ApproximateTime<Image, GroundPlane, CameraInfo> > sync(MyConstSyncPolicy,
+    const sync_policies::ApproximateTime<Image, GroundPlane> MyConstSyncPolicy = MySyncPolicy;
+    Synchronizer< sync_policies::ApproximateTime<Image, GroundPlane> > sync(MyConstSyncPolicy,
                                                                                        subscriber_depth,
-                                                                                       subscriber_gp,
-                                                                                       subscriber_camera_info);
+                                                                                       subscriber_gp);
     // Register one callback for all topics
-    sync.registerCallback(boost::bind(&callback, _1, _2, _3));
+    sync.registerCallback(boost::bind(&callback, _1, _2));
 
 
     // Create publisher
@@ -426,8 +424,8 @@ int main(int argc, char **argv)
     private_node_handle_.param("upper_body_bb_centres", pub_topic_centres, string("/upper_body_detector/bounding_box_centres"));
     pub_centres = n.advertise<geometry_msgs::PoseArray>(pub_topic_centres.c_str(), 10, con_cb, con_cb);
 
-    private_node_handle_.param("upper_body_image", pub_topic_result_image, string("/upper_body_detector/image"));
-    pub_result_image = it.advertise(pub_topic_result_image.c_str(), 1, image_cb, image_cb);
+    //private_node_handle_.param("upper_body_image", pub_topic_result_image, string("/upper_body_detector/image"));
+    //pub_result_image = it.advertise(pub_topic_result_image.c_str(), 1, image_cb, image_cb);
 
     private_node_handle_.param("detected_persons", pub_topic_detected_persons, string("/detected_persons"));
     pub_detected_persons = n.advertise<spencer_tracking_msgs::DetectedPersons>(pub_topic_detected_persons, 10, con_cb, con_cb);
